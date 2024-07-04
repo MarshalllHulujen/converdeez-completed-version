@@ -13,6 +13,7 @@ import {
   Platform,
   ViewBase,
   ScrollView,
+  RefreshControl
 } from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { Logo } from '@/app/Logo';
@@ -57,6 +58,15 @@ export default function MusicPlayerPage() {
   const [value, setValue] = useState();
   const isSeeking = useRef(false);
   const shouldPlayAtEndOfSeek = useRef(false);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
 
   useEffect(() => {
     (async () => {
@@ -213,7 +223,7 @@ export default function MusicPlayerPage() {
     <View style={styles.container}>
       <View>
         <Logo />
-        <ScrollView style={{ height: 500 }}>
+        <ScrollView style={{ height: 500 }}refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}  >
           {downloads.map((el) => {
             return (
               <TouchableOpacity

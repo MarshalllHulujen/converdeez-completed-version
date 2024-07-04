@@ -3,6 +3,7 @@ import * as FileSystem from 'expo-file-system';
 import { Link, useNavigation } from 'expo-router';
 import { shareAsync } from 'expo-sharing';
 import { useEffect, useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { Logo } from '../Logo';
 import { addDownload } from '@/utils/downloads';
@@ -46,6 +48,15 @@ export default function TabOneScreen() {
   const [description, setDescripion] = useState('');
   const [time, setTime] = useState(0);
   const navigation = useNavigation();
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
   const [createHistory, { data: createdData, loading: createLoading, error: createError }] =
     useMutation(CREATE_HISTORY);
   const { userId } = useGlobalState();
@@ -57,7 +68,7 @@ export default function TabOneScreen() {
   const Handler = async () => {
     try {
       const dataRetriever: any = await axios
-        .post(`http://192.168.11.238:3000/api/getinfo`, {
+        .post(`https://backend-ochre-beta.vercel.app/api/getinfo`, {
           url: value,
         })
         .then((el: any) => {
@@ -76,7 +87,7 @@ export default function TabOneScreen() {
   const MP3Handler = async () => {
     try {
       const dataRetriever: any = await axios.get(
-        `http://192.168.11.238:3000/api/downloadmp3?url=${value}`,
+        `https://backend-ochre-beta.vercel.app/api/downloadmp3?url=${value}`,
         {
           responseType: 'arraybuffer',
         },
@@ -87,7 +98,7 @@ export default function TabOneScreen() {
           const image: string = `${details.thumbnail}`;
           const name: string = `${title}.mp3`;
           const downloadResumable = FileSystem.createDownloadResumable(
-            `http://192.168.11.238:3000/api/downloadmp3?url=${value}`,
+            `https://backend-ochre-beta.vercel.app/api/downloadmp3?url=${value}`,
             FileSystem.documentDirectory + name,
             {
               headers: {
@@ -100,6 +111,13 @@ export default function TabOneScreen() {
           await addDownload({ title, uri, image });
           console.log('Succesfully download at:', uri);
           save(uri, name, mimeType);
+          createHistory({
+            variables: {
+              link: `https://backend-ochre-beta.vercel.app/api/downloadmp4?url=${value}`,
+              title: title,
+              userId: userId,
+            },
+          });
           console.log('Success!!');
         } catch (error) {
           console.error(error);
@@ -113,7 +131,7 @@ export default function TabOneScreen() {
   const DownloadMP3 = async () => {
     try {
       const dataRetriever: any = await axios.get(
-        `http://192.168.11.238:3000/api/downloadmp3?url=${value}`,
+        `https://backend-ochre-beta.vercel.app/api/downloadmp3?url=${value}`,
         {
           responseType: 'arraybuffer',
         },
@@ -124,44 +142,7 @@ export default function TabOneScreen() {
           const title: string = `${details.title}.mp3`;
           const name: string = `${title}.mp3`;
           const downloadResumable = FileSystem.createDownloadResumable(
-            `http://192.168.11.238:3000/api/downloadmp3?url=${value}`,
-            FileSystem.documentDirectory + name,
-            {
-              headers: {
-                MyHeader: 'MyValue',
-              },
-            },
-          );
-          const mimeType = 'example';
-          const { uri }: any = await downloadResumable.downloadAsync();
-          console.log('Succesfully download at:', uri);
-          save(uri, name, mimeType);
-          console.log('Success!!');
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const MP4Handler = async () => {
-    try {
-      const dataRetriever: any = await axios.get(
-        `http://192.168.11.238:3000/api/downloadmp4?url=${value}`,
-        {
-          responseType: 'arraybuffer',
-        },
-      );
-
-      if (dataRetriever) {
-        try {
-          const title: string = `${details.title}.mp4`;
-          const image: string = `${details.thumbnail}`;
-          const name: string = `${title}.mp4`;
-          const downloadResumable = FileSystem.createDownloadResumable(
-            `http://192.168.11.238:3000/api/downloadmp4?url=${value}`,
+            `https://backend-ochre-beta.vercel.app/api/downloadmp3?url=${value}`,
             FileSystem.documentDirectory + name,
             {
               headers: {
@@ -175,7 +156,51 @@ export default function TabOneScreen() {
           save(uri, name, mimeType);
           createHistory({
             variables: {
-              link: `http://192.168.11.238:3000/api/downloadmp4?url=${value}`,
+              link: `https://backend-ochre-beta.vercel.app/api/downloadmp4?url=${value}`,
+              title: title,
+              userId: userId,
+            },
+          });
+          console.log('Success!!');
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const MP4Handler = async () => {
+    try {
+      const dataRetriever: any = await axios.get(
+        `https://backend-ochre-beta.vercel.app/api/downloadmp4?url=${value}`,
+        {
+          responseType: 'arraybuffer',
+        },
+      );
+
+      if (dataRetriever) {
+        try {
+          const title: string = `${details.title}.mp4`;
+          const image: string = `${details.thumbnail}`;
+          const name: string = `${title}.mp4`;
+          const downloadResumable = FileSystem.createDownloadResumable(
+            `https://backend-ochre-beta.vercel.app/api/downloadmp4?url=${value}`,
+            FileSystem.documentDirectory + name,
+            {
+              headers: {
+                MyHeader: 'MyValue',
+              },
+            },
+          );
+          const mimeType = 'example';
+          const { uri }: any = await downloadResumable.downloadAsync();
+          console.log('Succesfully download at:', uri);
+          save(uri, name, mimeType);
+          createHistory({
+            variables: {
+              link: `https://backend-ochre-beta.vercel.app/api/downloadmp4?url=${value}`,
               title: title,
               userId: userId,
             },
@@ -219,7 +244,7 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView>
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <Logo />
         <View style={{ alignSelf: 'center', padding: 15, gap: 10 }}>
           <TextInput
@@ -242,9 +267,21 @@ export default function TabOneScreen() {
                   gap: 10,
                   borderRadius: 10,
                 }}>
-                <Button onPress={MP3Handler} title="Download MP3" color="red" />
-                <Button onPress={DownloadMP3} title="MP3 no playlist" />
-                <Button onPress={MP4Handler} title="Download MP4" color="lime" />
+                <View style={{ flexDirection: 'row', gap: 5, width: 125 }}>
+                  <View style={{ flexDirection: 'column', gap: 25 }}>
+                    <Button onPress={MP3Handler} title="Download MP3" color="red" />
+                    <Button onPress={DownloadMP3} title="MP3 no playlist" />
+                    {/* <Button onPress={MP4Handler} title="Download MP4" color="lime" /> */}
+                  </View>
+                  <View style={{ flexDirection: "column", width: 5 }} >
+                  </View>
+                  <Text style={{ color: "red" }} >
+                  Note: Download may take a long time. Please do not close or restart the application. Wait until the process is complete.
+                  </Text>
+                  <Text>
+                    If it doesn't downloading try different video 
+                  </Text>
+                </View>
               </View>
             </View>
           ) : (

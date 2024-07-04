@@ -4,7 +4,7 @@ import { GlobalStateProvider } from '../context/GlobalStateProvider';
 
 export default function RootLayoutNav() {
   const client = new ApolloClient({
-    uri: 'http://192.168.11.238:3000/api/graphql',
+    uri: 'https://backend-ochre-beta.vercel.app/api/graphql',
     cache: new InMemoryCache(),
   });
   return (

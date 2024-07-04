@@ -1,7 +1,7 @@
 import { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
-  schema: 'http://localhost:3000/api/graphql',
+  schema: 'https://backend-ochre-beta.vercel.app/api/graphql',
   documents: ['./graphql/documents/**/*.graphql'],
   generates: {
     './graphql/generated/index.ts': {

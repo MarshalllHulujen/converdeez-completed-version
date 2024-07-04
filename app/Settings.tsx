@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { Text, View, StyleSheet, Button } from 'react-native';
+import { Text, View, StyleSheet, Button, RefreshControl, ScrollView } from 'react-native';
 import { Logo } from '@/app/Logo';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from 'expo-router';
@@ -8,6 +8,7 @@ import { gql, useLazyQuery, useQuery } from '@apollo/client';
 import { useGlobalState } from '@/context/GlobalStateProvider';
 import { Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+
 const GET_USER = gql`
   query GetUserById($id: ID!) {
     getUserById(id: $id) {
@@ -20,12 +21,12 @@ const GET_USER = gql`
 `;
 
 const GET_HISTORY = gql`
-  query getHistory($userId: userId!) {
+  query GetHistory($userId: String!) {
     getHistory(userId: $userId) {
-      title
-      userId
-      id
-    }
+    id
+    title
+    userId
+  }
   }
 `;
 
@@ -39,7 +40,16 @@ export default function ProfilePage() {
   const [email, setEmail] = useState('');
   const [image, setImage] = useState('');
   const { userId }: any = useGlobalState();
+  const [ link, setLink ] = useState('');
   const [histories, setHistories] = useState([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
 
   useEffect(() => {
     if (userId) {
@@ -54,7 +64,7 @@ export default function ProfilePage() {
   });
 
   const [getHistory]: any = useLazyQuery(GET_HISTORY, {
-    onError: (error) => console.error(error),
+    onError: (error) => console.error(error)
   });
 
   useEffect(() => {
@@ -66,6 +76,14 @@ export default function ProfilePage() {
         setEmail(el.data.getUserById.email);
         setImage(el.data.getUserById.image);
       });
+      getHistory({
+        variables: { userId: userId },
+      }).then(async (el : any) => {
+        setHistories(el.data.getHistory)
+        // setHistories(result.map((el : any) => {
+        //   console.log(el.title)
+        // }))
+      })
     }
   }, []);
 
@@ -78,6 +96,7 @@ export default function ProfilePage() {
     <View style={styles.container}>
       {isUser ? (
         <View>
+          <ScrollView  style={{ height: 500 }}refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
           <View style={{ paddingTop: 50 }}>
             <Logo />
             <View style={{ padding: 10, flexDirection: 'column', justifyContent: 'flex-end' }}>
@@ -96,17 +115,25 @@ export default function ProfilePage() {
             </View>
             <View style={{ padding: 15 }}>
               <Text style={{ fontSize: 25, fontWeight: 'bold' }}>Recently converted:</Text>
-              <View style={{ paddingLeft: 25, gap: 25, padding: 10 }}>
-                <Text style={{ fontSize: 17 }}>QWERTY [Official Visualizer] - Linkin Park</Text>
+              <View style={{ paddingLeft: 25, gap: 25, padding: 15, flexDirection: "column" }}>
+                {/* <Text style={{ fontSize: 17 }}>QWERTY [Official Visualizer] - Linkin Park</Text>
                 <Text style={{ fontSize: 17 }}>Dimrain47 - The Disturbance</Text>
                 <Text style={{ fontSize: 17 }}>Dimrain47 - At the Speed of Light</Text>
                 <Text style={{ fontSize: 17 }}>Big Arm</Text>
                 <Text style={{ fontSize: 17 }}>
                   In The End [Official HD Music Video] - Linkin Park
+                </Text> */}
+                <Text style={{ fontSize: 17, gap: 20, flexDirection: "column", width: 2 }}>
+                  {histories.map((el:any) => {
+                    return <View style={{flexDirection: "column" }} >
+                    <Text style={{ padding: 10, fontSize: 15,}} > {el.title} </Text> 
+                  </View>
+                  })} 
                 </Text>
               </View>
             </View>
           </View>
+          </ScrollView>
         </View>
       ) : (
         <View style={styles.container}>
